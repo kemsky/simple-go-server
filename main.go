@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"context"
 	"syscall"
+	"fmt"
 )
 
 const readTimeout = 1000 * time.Second
@@ -28,7 +29,8 @@ func main() {
 		Routes: make(map[string]func(http.ResponseWriter, *http.Request)),
 	}
 
-	handler.Routes["/"] = homeController
+	handler.Routes["/"] = homeAction
+	handler.Routes["/save"] = saveAction
 
 	server := &http.Server{
 		Addr:           address,
@@ -69,19 +71,45 @@ func wait() {
 }
 
 //noinspection GoUnusedParameter
-func homeController(response http.ResponseWriter, request *http.Request) {
-	io.WriteString(response, "This is simple http server written in Go.")
+func homeAction(response http.ResponseWriter, request *http.Request) {
+	io.WriteString(response,
+		`<html>
+		<body>
+			<p>This is simple http server written in Go.</p>
+			<form action="save" method="POST">
+			    <label>Enter Text:</label>
+				<input type="text" name="name">
+				<input type="submit" value="Submit">
+			</form>
+		</body>
+		</html>`)
+}
+
+//noinspection GoUnusedParameter
+func saveAction(response http.ResponseWriter, request *http.Request) {
+	template := `<html>
+		<body>
+			<p>This is simple http server written in Go.</p>
+			<p>Parameter value: <b>%s</b></p>
+		</body>
+		</html>`
+	request.ParseForm()
+
+	name := request.PostForm.Get("name")
+
+	body := fmt.Sprintf(template, name)
+	io.WriteString(response, body)
 }
 
 //ServeHTTP routes incoming requests
 func (handler *httpHandler) ServeHTTP(response http.ResponseWriter, request *http.Request) {
-	url := request.URL.String()
+	path := request.URL.Path
 
-	if controller, ok := handler.Routes[url]; ok {
+	if controller, ok := handler.Routes[path]; ok {
 		controller(response, request)
 	} else {
 		response.WriteHeader(http.StatusNotFound)
-		io.WriteString(response, "Page was not found: "+url)
-		log.Printf("Not Found: '%s'", url)
+		io.WriteString(response, "Page was not found: "+path)
+		log.Printf("Not Found: '%s'", path)
 	}
 }
