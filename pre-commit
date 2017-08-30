@@ -1,0 +1,32 @@
+#!/bin/sh
+
+files=$(git diff --cached --name-only --diff-filter=ACM | grep ".go$")
+if [ "$files" = "" ]; then 
+    exit 0 
+fi
+
+pass=true
+
+if go vet; then
+    echo
+else
+   echo "vet - failed"
+   pass=false
+fi
+
+if $pass; then
+  if golint -set_exit_status; then
+     echo
+  else
+     echo "golint - failed"
+     pass=false
+  fi
+fi
+
+
+if ! $pass; then
+    echo "COMMIT FAILED: Please fix the errors and try again"
+    exit 1
+else
+    echo "COMMIT SUCCEEDED"
+fi
