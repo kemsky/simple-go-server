@@ -12,7 +12,9 @@ import (
 )
 
 const readTimeout = 1000 * time.Second
+
 const writeTimeout = 1000 * time.Second
+
 const address = "0.0.0.0:8080"
 
 type httpHandler struct {
@@ -66,8 +68,9 @@ func wait() {
 	log.Println("Iterrupted...")
 }
 
-func homeController(w http.ResponseWriter, r *http.Request) {
-	io.WriteString(w, "This is simple http server written in Go.")
+//noinspection GoUnusedParameter
+func homeController(response http.ResponseWriter, request *http.Request) {
+	io.WriteString(response, "This is simple http server written in Go.")
 }
 
 //ServeHTTP routes incoming requests
